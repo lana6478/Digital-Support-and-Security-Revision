@@ -288,3 +288,22 @@ details summary { cursor: pointer; font-weight: 700; color: #1d5bb8; }
   .note { border: 0; padding: 0; break-inside: avoid; }
 }
 .shared-note { display: inline-block; background: #e4e8eb; border-radius: 4px; padding: .3rem .7rem; font-size: .92rem; color: #34404b; }
+
+/* moving progress between devices */
+.transfer { margin-top: 2.5rem; }
+.transfer > p { max-width: var(--measure); }
+.transfer-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(18rem, 1fr)); gap: 1rem; margin-top: 1rem; }
+.transfer-box { background: var(--card); border: 1px solid var(--line); border-radius: 8px; padding: 1.1rem 1.25rem; }
+.transfer-box h3 { margin-top: 0; }
+.transfer-box label { display: block; font-weight: 700; margin: .9rem 0 .3rem; }
+.transfer-box .file-btn { display: inline-flex; margin: 0; font-weight: 700; }
+.transfer textarea { width: 100%; font: .85rem/1.4 ui-monospace, Menlo, Consolas, monospace; padding: .5rem .6rem; border: 1px solid var(--line); border-radius: 6px; resize: vertical; word-break: break-all; background: #fff; color: var(--ink); }
+.file-btn { cursor: pointer; }
+.file-btn:focus-within { outline: 3px solid currentColor; outline-offset: 3px; }
+.tf-qr { margin: 1rem 0 0; }
+.tf-qr svg { display: block; width: 100%; max-width: 320px; height: auto; background: #fff; shape-rendering: crispEdges; }
+.tf-qr figcaption { font-size: .9rem; color: var(--muted); margin-top: .4rem; max-width: 34ch; }
+.tf-msg { min-height: 1.4em; margin: .6rem 0 0; }
+.tf-msg.ok { color: #17623a; font-weight: 700; }
+.tf-msg.err { color: #a3261c; font-weight: 700; }
+.tf-flash { background: #e3f6ea; border: 1px solid #9fd8b4; border-radius: 6px; padding: .6rem .9rem; max-width: var(--measure); }

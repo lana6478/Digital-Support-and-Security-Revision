@@ -347,7 +347,8 @@
   /* ---------- progress ---------- */
   function renderProgress() {
     setTitle("My progress");
-    var h = '<div class="page wire-steel"><p class="crumbs"><a href="#/">Panel</a> / My progress</p><h1>My progress</h1><p class="lede">Everything is stored in this browser. If you clear your browsing data or switch device, it starts again.</p>';
+    var h = '<div class="page wire-steel"><p class="crumbs"><a href="#/">Panel</a> / My progress</p><h1>My progress</h1><p class="lede">Everything is stored in this browser. If you clear your browsing data it starts again – but you can <a href="#transfer" id="tfJump">move your progress to another device</a>.</p>';
+    if (flash) { h += '<p class="tf-msg ok tf-flash" role="status">' + esc(flash) + '</p>'; flash = null; }
     var shown = R.sections.filter(function (s) { return s.kind === "core" || !store.spec || s.id === store.spec; });
     shown.forEach(function (s) {
       var ts = topicsOf(s), counts = { g: 0, a: 0, r: 0, off: 0 };
@@ -360,13 +361,185 @@
       });
       h += '</tbody></table></div></section>';
     });
+    h += transferHTML();
     h += '<section class="reset"><h2>Start again</h2><p>Clear every rating, flashcard mark and quiz score saved in this browser.</p><button class="btn btn-no" type="button" id="resetBtn">Clear my progress</button><p class="reset-note" aria-live="polite"></p></section></div>';
     el(h);
+    bindTransfer();
+    document.getElementById("tfJump").onclick = function (e) { e.preventDefault(); document.getElementById("transfer").scrollIntoView(); document.getElementById("tfMake").focus({ preventScroll: true }); };
     var b = document.getElementById("resetBtn"), armed = false;
     b.onclick = function () {
       if (!armed) { armed = true; b.textContent = "Press again to clear everything"; return; }
       store = { spec: store.spec, rating: {}, cards: {}, quiz: {}, last: null }; save(); renderProgress();
       main.querySelector(".reset-note").textContent = "Progress cleared.";
+    };
+  }
+
+  /* ---------- move progress to another device ----------
+     A transfer code is the student's progress packed into JSON, compressed (deflate-raw) when the
+     browser supports it, and base64url-encoded. "z." = compressed, "j." = plain JSON.
+     The code can be copied, downloaded as a file, or opened from a QR code (#/import/<code>).
+     Importing merges: ratings and card marks from the code win, the best quiz score is kept. */
+  var flash = null;
+  var QR_MAX = 900; // longest link (characters) shown as a QR code; bigger codes get too dense to scan from a screen
+  function b64urlFromBytes(bytes) {
+    var s = "";
+    for (var i = 0; i < bytes.length; i += 0x8000) s += String.fromCharCode.apply(null, bytes.subarray(i, i + 0x8000));
+    return btoa(s).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+  }
+  function bytesFromB64url(t) {
+    t = t.replace(/-/g, "+").replace(/_/g, "/");
+    while (t.length % 4) t += "=";
+    var s = atob(t), b = new Uint8Array(s.length);
+    for (var i = 0; i < s.length; i++) b[i] = s.charCodeAt(i);
+    return b;
+  }
+  function pipeBytes(bytes, stream) {
+    return new Response(new Blob([bytes]).stream().pipeThrough(stream)).arrayBuffer().then(function (b) { return new Uint8Array(b); });
+  }
+  function packProgress() {
+    var t = {};
+    R.order.forEach(function (id) {
+      var topic = R.topics[id], m = store.cards[id] || {}, s = "";
+      for (var i = 0; i < (topic.cards || []).length; i++) s += m[i] === 1 ? "1" : m[i] === 0 ? "0" : "-";
+      s = s.replace(/-+$/, "");
+      var r = store.rating[id] || "", q = store.quiz[id] != null ? store.quiz[id] : -1;
+      if (r || q >= 0 || s) t[id] = [r, q, s];
+    });
+    return { a: KEY, v: 1, s: store.spec, t: t };
+  }
+  function makeCode() {
+    var bytes = new TextEncoder().encode(JSON.stringify(packProgress()));
+    if (window.CompressionStream) {
+      return pipeBytes(bytes, new CompressionStream("deflate-raw"))
+        .then(function (z) { return "z." + b64urlFromBytes(z); }, function () { return "j." + b64urlFromBytes(bytes); });
+    }
+    return Promise.resolve("j." + b64urlFromBytes(bytes));
+  }
+  function readCode(code) {
+    code = String(code || "").replace(/\s+/g, "");
+    var m = code.match(/#\/import\/(.+)$/);
+    if (m) code = decodeURIComponent(m[1]);
+    var kind = code.slice(0, 2), body = code.slice(2);
+    return new Promise(function (resolve, reject) {
+      var bytes;
+      try { bytes = bytesFromB64url(body); } catch (e) { return reject(new Error("bad")); }
+      if (!body) return reject(new Error("bad"));
+      if (kind === "j.") return resolve(bytes);
+      if (kind === "z.") {
+        if (!window.DecompressionStream) return reject(new Error("old"));
+        return pipeBytes(bytes, new DecompressionStream("deflate-raw")).then(resolve, function () { reject(new Error("bad")); });
+      }
+      reject(new Error("bad"));
+    }).then(function (b) {
+      var p;
+      try { p = JSON.parse(new TextDecoder().decode(b)); } catch (e) { throw new Error("bad"); }
+      if (!p || p.v !== 1 || typeof p.t !== "object") throw new Error("bad");
+      if (p.a !== KEY) throw new Error("other");
+      return p;
+    });
+  }
+  function mergeProgress(p) {
+    var n = { ratings: 0, cards: 0, quiz: 0 };
+    Object.keys(p.t).forEach(function (id) {
+      var t = R.topics[id], e = p.t[id];
+      if (!t || !Array.isArray(e)) return;
+      if (/^[rag]$/.test(e[0])) { store.rating[id] = e[0]; n.ratings++; }
+      var v = Number(e[1]);
+      if (v >= 0 && v <= 100) { if (store.quiz[id] == null || v > store.quiz[id]) store.quiz[id] = v; n.quiz++; }
+      var s = String(e[2] || "");
+      if (s) store.cards[id] = store.cards[id] || {};
+      for (var i = 0; i < s.length && i < (t.cards || []).length; i++) {
+        if (s[i] === "1" || s[i] === "0") { store.cards[id][i] = Number(s[i]); n.cards++; }
+      }
+    });
+    if (p.s && section(p.s)) store.spec = p.s;
+    save();
+    return n;
+  }
+  var importErrors = {
+    bad: "That code isn't complete or has a typo. Copy the whole code again and paste it in.",
+    old: "This browser is too old to open the code. Update it, or use the latest Chrome, Safari, Edge or Firefox.",
+    other: "That code is from a different revision site, so it can't be imported here."
+  };
+  function importSummary(n) {
+    return "Progress imported: " + n.ratings + " topic rating" + (n.ratings === 1 ? "" : "s") + ", " + n.cards + " flashcard mark" + (n.cards === 1 ? "" : "s") + " and " + n.quiz + " quiz score" + (n.quiz === 1 ? "" : "s") + ".";
+  }
+  function transferHTML() {
+    return '<section class="transfer" id="transfer" aria-labelledby="tf-h"><h2 id="tf-h">Move your progress to another device</h2>' +
+      '<p>Your progress is saved in this browser only. To carry on somewhere else, create a transfer code on this device and open it on the other one. Imported progress is added to what\'s already there: ratings and flashcard marks from the code replace the ones on that device, and the best quiz score is kept.</p>' +
+      '<div class="transfer-grid"><div class="transfer-box"><h3>Send from this device</h3>' +
+      '<p>The code is a snapshot. If you keep revising here, make a new code before you switch.</p>' +
+      '<button class="btn" type="button" id="tfMake">Create transfer code</button><div id="tfOut" aria-live="polite"></div></div>' +
+      '<div class="transfer-box"><h3>Receive on this device</h3>' +
+      '<label for="tfIn">Paste a transfer code</label><textarea id="tfIn" rows="4" spellcheck="false" autocomplete="off"></textarea>' +
+      '<div class="done-btns"><button class="btn" type="button" id="tfImport">Import progress</button>' +
+      '<label class="btn btn-ghost file-btn">Open a progress file<input type="file" id="tfFile" accept=".txt,text/plain" class="vh"></label></div>' +
+      '<p class="tf-msg" id="tfMsg" aria-live="polite"></p></div></div></section>';
+  }
+  function bindTransfer() {
+    var make = document.getElementById("tfMake"), out = document.getElementById("tfOut");
+    var msg = document.getElementById("tfMsg");
+    function say(text, ok) { msg.textContent = text; msg.className = "tf-msg " + (ok ? "ok" : "err"); }
+    make.onclick = function () {
+      make.disabled = true;
+      makeCode().then(function (code) {
+        make.disabled = false;
+        var url = location.href.split("#")[0] + "#/import/" + code, qrHTML = "";
+        try {
+          if (window.qrcode && url.length <= QR_MAX) { var qr = qrcode(0, "L"); qr.addData(url); qr.make(); qrHTML = qr.createSvgTag({ cellSize: 3, margin: 4, scalable: true }); }
+        } catch (e) { qrHTML = ""; }
+        out.innerHTML = (qrHTML ? '<figure class="tf-qr">' + qrHTML + '<figcaption>Scan with your phone\'s camera to open this site with your progress loaded.</figcaption></figure>'
+          : '<p>You have too much progress for a QR code that a phone could scan reliably, so copy the code or download the file instead.</p>') +
+          '<label for="tfCode">Your transfer code</label><textarea id="tfCode" rows="4" readonly spellcheck="false">' + esc(code) + '</textarea>' +
+          '<div class="done-btns"><button class="btn" type="button" id="tfCopy">Copy code</button><button class="btn btn-ghost" type="button" id="tfSave">Download as a file</button></div>' +
+          '<p class="tf-msg" id="tfCopied" aria-live="polite"></p>';
+        var svg = out.querySelector("svg"); if (svg) { svg.setAttribute("role", "img"); svg.setAttribute("aria-label", "QR code for your transfer code"); }
+        var box = document.getElementById("tfCode"), note = document.getElementById("tfCopied");
+        document.getElementById("tfCopy").onclick = function () {
+          function fallback() { box.select(); try { document.execCommand("copy"); note.textContent = "Copied."; note.className = "tf-msg ok"; } catch (e) { note.textContent = "Select the code and copy it."; note.className = "tf-msg"; } }
+          if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(code).then(function () { note.textContent = "Copied."; note.className = "tf-msg ok"; }, fallback);
+          else fallback();
+        };
+        document.getElementById("tfSave").onclick = function () {
+          var a = document.createElement("a");
+          a.href = URL.createObjectURL(new Blob([code], { type: "text/plain" }));
+          a.download = "revision-progress-" + new Date().toISOString().slice(0, 10) + ".txt";
+          document.body.appendChild(a); a.click(); a.remove();
+          setTimeout(function () { URL.revokeObjectURL(a.href); }, 1000);
+          note.textContent = "Downloaded. Open this file on your other device using 'Open a progress file'."; note.className = "tf-msg ok";
+        };
+      });
+    };
+    function doImport(code) {
+      if (!String(code || "").trim()) { say("Paste a transfer code first.", false); return; }
+      readCode(code).then(function (p) {
+        var n = mergeProgress(p);
+        flash = importSummary(n);
+        renderProgress();
+      }, function (e) { say(importErrors[e.message] || importErrors.bad, false); });
+    }
+    document.getElementById("tfImport").onclick = function () { doImport(document.getElementById("tfIn").value); };
+    document.getElementById("tfFile").onchange = function (e) {
+      var f = e.target.files && e.target.files[0]; if (!f) return;
+      var r = new FileReader();
+      r.onload = function () { doImport(r.result); };
+      r.onerror = function () { say("That file couldn't be read. Try downloading it again.", false); };
+      r.readAsText(f);
+      e.target.value = "";
+    };
+  }
+  function renderImport(code) {
+    setTitle("Import progress");
+    el('<div class="page hue-steel wire-steel"><p class="crumbs"><a href="#/">Panel</a> / Import progress</p><h1>Import progress</h1>' +
+      '<p class="lede">You opened a link containing revision progress from another device. Import it into this browser?</p>' +
+      '<p>Ratings and flashcard marks from the code will replace the ones saved here, and your best quiz scores are kept.</p>' +
+      '<div class="done-btns"><button class="btn" type="button" id="impYes">Import progress</button><a class="btn btn-ghost" href="#/">Cancel</a></div>' +
+      '<p class="tf-msg" id="impMsg" aria-live="polite"></p></div>');
+    document.getElementById("impYes").onclick = function () {
+      readCode(code).then(function (p) {
+        flash = importSummary(mergeProgress(p));
+        location.replace("#/progress");
+      }, function (e) { var m = document.getElementById("impMsg"); m.textContent = importErrors[e.message] || importErrors.bad; m.className = "tf-msg err"; });
     };
   }
 
@@ -407,6 +580,7 @@
       case "quiz": return renderMixed(parts[1]);
       case "review": return renderReview();
       case "progress": return renderProgress();
+      case "import": return renderImport(parts.slice(1).join("/"));
       case "search": return renderSearch(parts.slice(1).join("/"));
       default: return notFound();
     }

@@ -25,6 +25,8 @@ Coverage: course structure and grading, exam technique, **Core Paper 1**, **Core
 
 Progress is saved in the visitor's own browser (localStorage). Nothing is sent anywhere.
 
+**Moving progress to another device:** on the *My progress* page, students create a transfer code on one device and open it on another – by copying and pasting the code, downloading it as a file, or scanning a QR code with their phone (which opens the site with the progress ready to import). Imported progress is merged in: ratings and flashcard marks from the code replace those on the receiving device, and the best quiz score is kept. The QR code is made in the browser with [qrcode-generator](https://github.com/kazuhikoarase/qrcode-generator) (MIT licence, `assets/js/vendor/qrcode.js`).
+
 ## Turning on the website (GitHub Pages)
 
 1. Go to the repo's **Settings → Pages**.
