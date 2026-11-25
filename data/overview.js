@@ -200,3 +200,66 @@ REV.add({
     ["'Explain one benefit of MFA.' Which answer would gain full marks?", ["MFA is more secure.", "MFA uses two factors.", "MFA makes accounts harder to break into because a stolen password alone is not enough.", "MFA, passwords, biometrics."], 2, "It gives a point and a linked justification."]
   ]
 });
+
+REV.add({
+  id: "ov-os-assessment", section: "overview", title: "How the specialism project is assessed", short: "Specialism project",
+  spec: "Occupational Specialism scheme of assessment",
+  summary: "Each specialism is assessed by **one synoptic project**: externally set and marked by Pearson, **37h 30m**, taken in a **window from March to May**, and graded **Pass, Merit, Distinction or Unclassified**.",
+  notes: [
+    { h: "Shape of every specialism project", list: [
+      "A **single synoptic project** that pulls together all three content areas, to check you can combine them and show threshold competence.",
+      "Split into **three or four substantive tasks**, each done in a Pearson-set window under supervised conditions (some tasks allow unsupervised preparation).",
+      "**37 hours 30 minutes**, run across several supervised sessions.",
+      "You respond to a scenario and submit a **portfolio of evidence** electronically.",
+      "**Internet access is allowed for every task except the final evaluation task.**",
+      "Externally marked by Pearson. You're not tested on isolated facts – you apply your knowledge to the practical outcomes."
+    ]},
+    { h: "Performance Outcomes (POs)", p: "Every specialism has three POs: **PO1** apply procedures and controls to maintain digital security; **PO2** the specialism's own technical skill; **PO3** discover, evaluate and apply reliable sources of knowledge." },
+    { h: "Marks and weighting by specialism", table: [
+      ["Specialism", "Total marks", "PO1 (security)", "PO2 (technical)", "PO3 (sources)"],
+      ["Digital Infrastructure", "99", "45 (45.5%)", "34 (34.3%)", "20 (20.2%)"],
+      ["Network Cabling", "111", "29 (26.1%)", "56 (50.5%)", "26 (23.4%)"],
+      ["Digital Support", "99", "39 (39.4%)", "36 (36.4%)", "24 (24.2%)"],
+      ["Cyber Security", "99", "35 (35.4%)", "38 (38.4%)", "26 (26.3%)"]
+    ]},
+    { h: "Tasks", p: "**Task 1** analysing a problem and designing a solution; **Task 2** developing the solution; **Task 3** evaluating the system (or cabling solution / support solutions). Cyber Security is described as having **four** component parts." },
+    { h: "Equipment you'll use", list: [
+      "**Everyone**: PCs or Macs that run Cisco Packet Tracer, office software, a web browser, internet, a printer; physical or virtualised machines for installing and configuring systems; a way to capture evidence.",
+      "**Digital Infrastructure**: network diagramming software, OS and server software, anti-virus and firewall software, virtualisation, USB/external drives, Wi-Fi.",
+      "**Network Cabling**: all of that plus UTP cable, RJ45 connectors, wall sockets, patch panel, wire cutters and crimpers, cable tester, tone generator and probe, labelling machine, trunking and ties, switch, router, Wi-Fi access point.",
+      "**Digital Support**: plus a tablet or smartphone, anti-virus, PDF reader, an alternative browser, email client and intranet software.",
+      "**Cyber Security**: plus anti-virus/anti-malware, vulnerability scanning software, firewall software and word processing for reports."
+    ]}
+  ],
+  tips: [
+    "Use the internet while you can – it isn't allowed in the final evaluation task, so keep good notes and references as you go.",
+    "PO1 (security) is a big share of marks in every specialism – even in Cabling it's over a quarter. Show your security thinking explicitly.",
+    "PO3 rewards citing and judging sources: say where information came from and why you trust it."
+  ],
+  cards: [
+    ["How is each occupational specialism assessed?", "By a single synoptic project, externally set and marked by Pearson."],
+    ["What does 'synoptic' mean for the specialism project?", "It draws together all three content areas, so you have to combine security, technical skills and research rather than recall isolated facts."],
+    ["How many substantive tasks is the specialism project split into?", "Three or four."],
+    ["When is the specialism project taken?", "In a Pearson-set window, March to May."],
+    ["When is internet access NOT allowed in the specialism project?", "In the final evaluation task (it's allowed in all the others)."],
+    ["How is evidence submitted for the specialism project?", "As a portfolio of evidence, submitted electronically."],
+    ["What are the three Performance Outcomes of every specialism?", "PO1 apply security procedures and controls; PO2 the specialism's technical skill; PO3 discover, evaluate and apply reliable sources of knowledge."],
+    ["What are the three tasks in the specialism project?", "Task 1 analyse a problem and design a solution; Task 2 develop the solution; Task 3 evaluate it."],
+    ["Which PO carries the most marks in Digital Infrastructure?", "PO1 – security procedures and controls (45 marks, 45.5%)."],
+    ["Which PO carries the most marks in Network Cabling?", "PO2 – installing and testing cabling (56 marks, 50.5%)."],
+    ["Which PO carries the most marks in Digital Support?", "PO1 – security procedures and controls (39 marks, 39.4%)."],
+    ["Which PO carries the most marks in Cyber Security?", "PO2 – remediation advice for a security risk assessment (38 marks, 38.4%)."],
+    ["How many marks is the Cyber Security project and how many component parts?", "99 marks, described as four component parts."],
+    ["What grades can the specialism project get?", "Pass, Merit, Distinction or Unclassified."],
+    ["What extra kit does the Network Cabling project need?", "UTP cable, RJ45 connectors, wall sockets, patch panel, crimpers and cutters, cable tester, tone generator and probe, labelling machine, trunking/ties, switch, router and Wi-Fi access point."],
+    ["What extra software does the Cyber Security project need?", "Anti-virus/anti-malware, vulnerability scanning software, firewall software and word processing for reports."]
+  ],
+  quiz: [
+    ["In which part of the specialism project is internet access banned?", ["Task 1", "Task 2", "The final evaluation task", "None – it's always banned"], 2, "Internet is allowed everywhere except the final evaluation."],
+    ["Which specialism has 111 marks?", ["Digital Infrastructure", "Network Cabling", "Digital Support", "Cyber Security"], 1, "The other three have 99."],
+    ["PO3 in every specialism is about…", ["Security controls", "Sources of knowledge", "Cabling", "Risk assessment"], 1, "Discover, evaluate and apply reliable sources of knowledge."],
+    ["In Digital Infrastructure, the biggest share of marks goes to…", ["PO1 security", "PO2 infrastructure", "PO3 sources", "They're equal"], 0, "45.5% for PO1."],
+    ["How long is the specialism project?", ["14h 30m", "2h 15m", "37h 30m", "315 hours"], 2, "37 hours 30 minutes across several sessions."],
+    ["What is Task 2 of the specialism project?", ["Analysing a problem", "Developing the solution", "Evaluating the system", "A written exam"], 1, "Task 1 design, Task 2 develop, Task 3 evaluate."]
+  ]
+});

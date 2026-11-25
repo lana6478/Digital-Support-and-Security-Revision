@@ -5,10 +5,17 @@ window.REV = {
   topics: {},
   order: [],
   add: function (t) { this.topics[t.id] = t; this.order.push(t.id); },
+  /* Append extra flashcards to an existing topic. New cards always go on the END of a deck,
+     because saved "Got it / Not yet" marks are stored by card position. */
+  addCards: function (id, cards) {
+    var t = this.topics[id];
+    if (!t) throw new Error("addCards: unknown topic " + id);
+    t.cards = (t.cards || []).concat(cards);
+  },
   sections: [
     { id: "overview", title: "Course and assessment", short: "Course", colour: "steel", kind: "core",
       desc: "How the T Level is structured, weighted and graded.",
-      topics: ["ov-course", "ov-grading", "exam-technique"] },
+      topics: ["ov-course", "ov-grading", "exam-technique", "ov-os-assessment"] },
     { id: "p1", title: "Core Paper 1", short: "Paper 1", colour: "orange", kind: "core",
       desc: "Problem solving, introduction to digital support, and data. 2h 15m written exam, 90 marks.",
       topics: ["p1-comp-thinking", "p1-strategies", "p1-reflective", "p1-infra", "p1-support-testing", "p1-data-support", "p1-risk-pm", "p1-sources", "p1-data-fund", "p1-data-systems"] },

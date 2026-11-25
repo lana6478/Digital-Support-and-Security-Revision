@@ -21,7 +21,7 @@ Across the whole site:
 - **My progress** – ratings, cards known and best quiz scores for every topic
 - **Search** – across all notes and flashcards
 
-Coverage: course structure and grading, exam technique, **Core Paper 1**, **Core Paper 2**, the **Employer Set Project**, and all four occupational specialisms (**Digital Infrastructure, Network Cabling, Digital Support, Cyber Security**). That's 59 topics, about 700 flashcards, 370 quiz questions and 25 exam-style questions.
+Coverage: course structure and grading, exam technique, **Core Paper 1**, **Core Paper 2**, the **Employer Set Project**, and all four occupational specialisms (**Digital Infrastructure, Network Cabling, Digital Support, Cyber Security**). That's 60 topics, about 1,590 flashcards, 380 quiz questions and 25 exam-style questions.
 
 Progress is saved in the visitor's own browser (localStorage). Nothing is sent anywhere.
 
@@ -47,6 +47,7 @@ All revision content lives in `data/`, one file per area:
 | `esp.js` | Employer Set Project |
 | `shared-specialism.js` | Security and sources-of-knowledge topics shared by the specialisms |
 | `digital-infrastructure.js`, `network-cabling.js`, `digital-support.js`, `cyber-security.js` | Each specialism's own topics |
+| `extra-cards-core.js`, `extra-cards-specialisms.js` | Extra flashcards added to existing topics so every examinable point has a card |
 
 Each topic is one `REV.add({...})` block:
 
@@ -67,6 +68,8 @@ REV.add({
   exam: [{ q: "Question", marks: 4, points: ["mark scheme point"] }]
 });
 ```
+
+To add flashcards to an existing topic, use `REV.addCards("topic-id", [["Question", "Answer"], ...]);` in one of the extra-cards files. Always add new cards to the **end** of a deck: students' saved progress is stored by card position, so inserting cards in the middle would mix up their marks.
 
 To add a new topic, add a block like this and put its `id` into the right section's `topics` list in `sections.js`. Quiz options are shuffled when shown, so the correct option can go anywhere.
 
